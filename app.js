@@ -1,56 +1,15 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+require('dotenv').config()
+const express = require('express')
+const http = require('http')
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+const app = express()
+const connectToDatabase = require('./db')
+const Note = require('./Note')
 
-var app = express();
+app.get('/', async (req, res) => {
+    await connectToDatabase()
+    const notes = await Note.find()
+    res.send({ v: 1, notes })
+})
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
-
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-
-// app.use('/', indexRouter);
-
-app.get("/", (req, res) => {
-  res.json({ status: "success", message: "Welcome To Testing API" });
-});
-
-app.post("/add", (req, res) => {
-  const { num1, num2 } = req.body;
-  const add = (num1, num2) => {
-    return num1 + num2;
-  };
-  res.json({
-    status: "success",
-    result: add(num1, num2)
-  });
-});
-
-app.use('/users', usersRouter);
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
-
-module.exports = app;
+http.createServer(app).listen(process.env.PORT || 8000)
